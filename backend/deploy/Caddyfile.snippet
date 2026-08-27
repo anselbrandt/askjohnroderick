@@ -1,0 +1,15 @@
+# Append to /etc/caddy/Caddyfile
+#
+# The existing site blocks inline the Cloudflare DNS token literally.
+# Either paste that same token here in place of the placeholder, or set
+# CLOUDFLARE_API_TOKEN in the caddy service environment and keep the
+# placeholder (preferred - keeps the secret out of the config file).
+
+ajr.anselbrandt.net {
+
+	tls {
+	    dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+
+	reverse_proxy localhost:8002
+}
