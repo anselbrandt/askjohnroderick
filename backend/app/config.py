@@ -8,6 +8,8 @@ ROOT_PATH = os.getenv("ROOT_PATH", "")
 
 ORIGINS = [
     "http://localhost:5173",
+    "https://askjohnroderick.com",
+    "https://www.askjohnroderick.com",
     "https://askjohnroderick.vercel.app",
 ]
 
