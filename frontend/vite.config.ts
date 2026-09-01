@@ -5,11 +5,11 @@ import { defineConfig, type ProxyOptions } from 'vite'
 /**
  * The first address from the backend's ALLOWED_IPS, or ''.
  *
- * The API gates /chat and /compare on CF-Connecting-IP, which only Cloudflare
+ * The API gates /chat on CF-Connecting-IP, which only Cloudflare
  * can set -- so a browser talking straight to a local backend is always
  * refused. Rather than loosen that check (production reaches the origin
  * through a tunnel, so it arrives as loopback too, and trusting loopback would
- * open the routes to everyone), the dev server proxies the API and adds the
+ * open the route to everyone), the dev server proxies the API and adds the
  * header itself. Nothing here ships: `proxy` applies to `vite dev` only.
  */
 function devClientIp(): string {
@@ -23,7 +23,7 @@ function devClientIp(): string {
 }
 
 const API_TARGET = process.env.VITE_DEV_API ?? 'http://127.0.0.1:8002'
-const ROUTES = ['/health', '/chat', '/compare']
+const ROUTES = ['/health', '/chat']
 
 const proxied: ProxyOptions = {
   target: API_TARGET,

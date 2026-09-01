@@ -5,16 +5,19 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from pydantic_ai import PartDeltaEvent, PartStartEvent
 from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
     ModelResponse,
     TextPart,
+    TextPartDelta,
     UserPromptPart,
 )
 
 from app.access import allowlisted
 from app.agent import agent
+from app.corpus import CorpusUnavailable
 
 router = APIRouter(prefix="/chat", tags=["chat"], dependencies=[Depends(allowlisted)])
 
@@ -41,6 +44,19 @@ def to_history(messages: list[Message]) -> list[ModelMessage]:
     return history
 
 
+def text_delta(event: object) -> str | None:
+    """The prose an event carries, if it carries any.
+
+    The event stream also reports tool calls and their returns; this route
+    shows only what the reader is meant to read.
+    """
+    if isinstance(event, PartStartEvent) and isinstance(event.part, TextPart):
+        return event.part.content or None
+    if isinstance(event, PartDeltaEvent) and isinstance(event.delta, TextPartDelta):
+        return event.delta.content_delta or None
+    return None
+
+
 def sse(payload: dict) -> str:
     return f"data: {json.dumps(payload)}\n\n"
 
@@ -55,14 +71,28 @@ async def chat(body: ChatRequest) -> StreamingResponse:
     *history, latest = body.messages
 
     async def events() -> AsyncIterator[str]:
+        """Stream the answer, including the text that follows a tool call.
+
+        `run_stream_events` rather than `run_stream`: the latter streams a
+        single model response, so an agent that searches the corpus streams its
+        preamble, goes quiet to search, and the real answer never arrives. It
+        does not look like a truncation from the client -- it looks like a
+        short reply -- which is what makes it worth pinning here.
+        """
         try:
-            async with agent.run_stream(
+            async with agent.run_stream_events(
                 latest.content, message_history=to_history(history)
-            ) as result:
-                # debounce_by=None yields each chunk as it lands, for smooth typing
-                async for delta in result.stream_text(delta=True, debounce_by=None):
-                    yield sse({"delta": delta})
+            ) as stream:
+                async for event in stream:
+                    delta = text_delta(event)
+                    if delta:
+                        yield sse({"delta": delta})
             yield sse({"done": True})
+        except CorpusUnavailable as exc:
+            # Distinct from a general failure: the archive being unreachable
+            # means this route cannot answer at all, since it may not fall back
+            # on what the model already knows.
+            yield sse({"error": f"the archive is unreachable: {exc}"})
         except Exception as exc:  # noqa: BLE001 - headers are sent, report in-band
             yield sse({"error": f"{type(exc).__name__}: {exc}"})
 

@@ -32,17 +32,3 @@ body {
   object-fit: contain;
   display: block;
 }
-
-.to-compare {
-  position: fixed;
-  top: 14px;
-  left: 20px;
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
-  color: rgba(214, 255, 232, 0.45);
-  text-decoration: none;
-}
-
-.to-compare:hover {
-  color: var(--ajr-phosphor);
-}
