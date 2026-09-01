@@ -2,7 +2,7 @@ import json
 from collections.abc import AsyncIterator
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from pydantic_ai.messages import (
@@ -13,9 +13,10 @@ from pydantic_ai.messages import (
     UserPromptPart,
 )
 
+from app.access import allowlisted
 from app.agent import agent
 
-router = APIRouter(prefix="/chat", tags=["chat"])
+router = APIRouter(prefix="/chat", tags=["chat"], dependencies=[Depends(allowlisted)])
 
 
 class Message(BaseModel):

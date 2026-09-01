@@ -27,7 +27,15 @@ export async function* streamChat(
   })
 
   if (!response.ok || !response.body) {
-    throw new Error(`${response.status} ${response.statusText}`)
+    // FastAPI puts a human-readable reason in `detail` (e.g. the IP allowlist).
+    let reason = `${response.status} ${response.statusText}`
+    try {
+      const body = await response.json()
+      if (typeof body?.detail === 'string') reason = body.detail
+    } catch {
+      // non-JSON error body, keep the status line
+    }
+    throw new Error(reason)
   }
 
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()

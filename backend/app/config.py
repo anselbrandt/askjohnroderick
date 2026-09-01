@@ -8,6 +8,11 @@ ROOT_PATH = os.getenv("ROOT_PATH", "")
 
 MODEL = os.getenv("MODEL", "anthropic:claude-opus-5")
 
+# Comma-separated public IPs allowed to use /chat. Empty means open to all.
+ALLOWED_IPS = {
+    ip.strip() for ip in os.getenv("ALLOWED_IPS", "").split(",") if ip.strip()
+}
+
 ORIGINS = [
     "http://localhost:5173",
     "https://askjohnroderick.com",
