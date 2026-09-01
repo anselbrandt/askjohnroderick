@@ -1,0 +1,53 @@
+import { API_URL } from './api'
+
+/**
+ * POST a JSON body and yield SSE payloads as they arrive.
+ *
+ * EventSource can't POST or set headers, so this reads the response body
+ * directly. Frames can be split across chunks, so the trailing partial frame
+ * is held back rather than parsed.
+ */
+export async function* postSSE<T>(
+  path: string,
+  body: unknown,
+  signal: AbortSignal,
+): AsyncGenerator<T> {
+  const response = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  })
+
+  if (!response.ok || !response.body) {
+    // FastAPI puts a human-readable reason in `detail` (e.g. the IP allowlist).
+    let reason = `${response.status} ${response.statusText}`
+    try {
+      const payload = await response.json()
+      if (typeof payload?.detail === 'string') reason = payload.detail
+    } catch {
+      // non-JSON error body, keep the status line
+    }
+    throw new Error(reason)
+  }
+
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += value
+    const frames = buffer.split('\n\n')
+    buffer = frames.pop() ?? ''
+
+    for (const frame of frames) {
+      for (const line of frame.split('\n')) {
+        if (line.startsWith('data: ')) {
+          yield JSON.parse(line.slice(6)) as T
+        }
+      }
+    }
+  }
+}
