@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-
-const API_URL = 'https://ajr.anselbrandt.net'
+import { API_URL } from './api'
+import { Chat } from './chat/Chat'
 
 type Health = 'pending' | 'ok' | 'error'
 
@@ -39,16 +39,8 @@ function App() {
 
   return (
     <>
-      <img
-        src="/john_roderick.jpg"
-        alt="John Roderick"
-        style={{
-          width: '100vw',
-          height: '100vh',
-          objectFit: 'contain',
-          display: 'block',
-        }}
-      />
+      <img className="backdrop" src="/john_roderick.jpg" alt="John Roderick" />
+      <Chat />
       <span
         title={`API health: ${health}`}
         style={{

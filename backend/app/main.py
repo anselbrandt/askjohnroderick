@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import ORIGIN_REGEX, ORIGINS, ROOT_PATH
-from app.routers import health
+from app.routers import chat, health
 
 app = FastAPI(title="Ask John Roderick", root_path=ROOT_PATH)
 
@@ -16,3 +16,4 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(chat.router)

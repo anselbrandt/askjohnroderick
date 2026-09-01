@@ -6,6 +6,8 @@ load_dotenv()
 
 ROOT_PATH = os.getenv("ROOT_PATH", "")
 
+MODEL = os.getenv("MODEL", "anthropic:claude-opus-5")
+
 ORIGINS = [
     "http://localhost:5173",
     "https://askjohnroderick.com",

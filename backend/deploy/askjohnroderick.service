@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=ansel
 WorkingDirectory=/home/ansel/dev/askjohnroderick/backend
-ExecStart=/home/ansel/.local/bin/uv run uvicorn app.main:app --host 0.0.0.0 --port 8002
+ExecStart=/home/ansel/.local/bin/uv run uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload --reload-dir app
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
