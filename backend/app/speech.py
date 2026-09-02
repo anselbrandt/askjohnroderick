@@ -20,9 +20,19 @@ import httpx
 
 from app.config import TTS_TIMEOUT_S, TTS_URL
 
-# "(rotl-634 @ 45:10)" and the bare "@ 45:10" form.
+# "(rotl-634 @ 45:10)" -- the old inline form, still stripped so a reply
+# written before the footnote change does not get read out as coordinates.
 CITATION = re.compile(r"\s*\(([a-z]+-\d+)\s*@\s*[\d:]+\)")
 MARKDOWN = re.compile(r"[*_`#>]+")
+
+SUPERSCRIPTS = "\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079"
+
+# A footnote line: a superscript marker, then the source. Matched anchored to
+# the line so a superscript inside a sentence is not mistaken for one.
+FOOTNOTE_LINE = re.compile(
+    rf"^[{SUPERSCRIPTS}]+[^\S\n]*[a-z0-9-]+\s*@\s*[\d:]+\s*$", re.MULTILINE
+)
+MARKER = re.compile(rf"[{SUPERSCRIPTS}]+")
 
 MAX_CHARS = 560  # under the service's 600, with room for punctuation
 
@@ -37,8 +47,20 @@ class SpeechUnavailable(RuntimeError):
 
 
 def speakable(text: str) -> str:
-    """The reply as it should be heard rather than read."""
-    spoken = CITATION.sub("", text)
+    """The reply as it should be heard rather than read.
+
+    Citations are for the eye. The footnote block at the end is dropped
+    outright, and the superscript markers in the prose go with it -- read
+    aloud they are just digits interrupting a sentence, and "the paradise that
+    it is, frankly, three" is worse than no citation at all.
+
+    The markers are removed rather than replaced with a pause: they sit
+    against the word they cite, and a gap there would break the phrase in a
+    place a speaker never would.
+    """
+    spoken = FOOTNOTE_LINE.sub("", text)
+    spoken = CITATION.sub("", spoken)
+    spoken = MARKER.sub("", spoken)
     spoken = MARKDOWN.sub("", spoken)
     return re.sub(r"\s+", " ", spoken).strip()
 

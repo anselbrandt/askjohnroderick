@@ -5,6 +5,16 @@ import './chat.css'
 
 const STICK_THRESHOLD = 96
 
+// A trailing block of "<superscript> episode-id @ timestamp" lines.
+const FOOTNOTES = /(?:^[\u2070\u00b9\u00b2\u00b3\u2074-\u2079]+[^\S\n]*[a-z0-9-]+\s*@\s*[\d:]+\s*$\n?)+\s*$/m
+
+/** Split a reply into its prose and its footnote block, if it has one. */
+function withFootnotes(content: string): [string, string | null] {
+  const match = content.match(FOOTNOTES)
+  if (!match) return [content, null]
+  return [content.slice(0, match.index).trimEnd(), match[0].trim()]
+}
+
 export function Chat() {
   const { messages, status, error, send, stop } = useChat()
   const speech = useSpeech()
@@ -94,7 +104,15 @@ export function Chat() {
               >
                 {message.content ? (
                   <>
-                    {message.content}
+                    {(() => {
+                      const [prose, notes] = withFootnotes(message.content)
+                      return (
+                        <>
+                          {prose}
+                          {notes && <span className="footnotes">{notes}</span>}
+                        </>
+                      )
+                    })()}
                     {message.role === 'assistant' && (
                       <button
                         className="speak"

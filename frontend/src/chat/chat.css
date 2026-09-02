@@ -251,3 +251,19 @@
 .mute[aria-pressed='true'] {
   color: rgba(214, 255, 232, 0.5);
 }
+
+/*
+ * Footnotes read as apparatus rather than as the end of the sentence: smaller,
+ * dimmer, and set off by a rule. The superscript markers stay in the prose at
+ * full weight, since they have to be findable.
+ */
+.footnotes {
+  display: block;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(84, 222, 148, 0.18);
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: rgba(214, 255, 232, 0.5);
+  white-space: pre-wrap;
+}
