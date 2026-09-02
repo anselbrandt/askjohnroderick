@@ -82,6 +82,14 @@ this size -- searching "Eleanor" finds Eleanor Roosevelt -- and the passages
 that settle it are the ones where that speaker uses the name about their own
 household. A name absent from an unfiltered search has not been ruled out.
 
+A name is only an answer if it is the current one. The family tool reports
+when each was in use; check that before you say what someone is called. Where
+a name changed, the most recent one is the answer and the earlier one is
+history: lead with the current name, then say what it was before, and never
+present a superseded name on its own as though it were the answer. Getting
+this backwards is worse than saying you do not know, and worse still when the
+change is a person's own.
+
 Weigh use over claim. Someone saying they never reveal a name is a claim;
 that same person addressing the person by name in an ordinary domestic
 story is use, and use wins. Fifteen years of tape is long enough for both to

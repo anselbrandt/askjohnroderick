@@ -103,8 +103,11 @@ def _render_relations(rows: list[dict]) -> str:
     for row in rows:
         who = row["name"] or f"(unnamed {row['relation']})"
         confidence = row.get("measured_precision", 0.0)
+        span = ""
+        if row.get("first_date"):
+            span = f"  used {row['first_date']} to {row.get('last_date') or '?'}"
         lines.append(
-            f"{row['speaker']} -- {row['relation']}: {who}  "
+            f"{row['speaker']} -- {row['relation']}: {who}{span}  "
             f"[this relation type is right about {confidence:.0%} of the time]"
         )
         for quote in row.get("evidence") or []:
@@ -119,6 +122,10 @@ async def family(person: str, relation: str | None = None) -> str:
     rather than by name -- "what is X's daughter called" -- because the archive
     usually names people in passages that never mention the relationship. It is
     the only way to get from "Merlin Mann's child" to a name.
+
+    Results are newest first, and each carries the years it was in use. A name
+    that stops being used has usually been superseded rather than disproved,
+    so read the spans before deciding which one answers the question.
 
     These are LEADS, NOT FACTS. Extraction is noisy and the reliability of each
     kind is reported inline: sibling and friend are usually right, child,
