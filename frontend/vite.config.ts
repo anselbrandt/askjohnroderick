@@ -23,7 +23,7 @@ function devClientIp(): string {
 }
 
 const API_TARGET = process.env.VITE_DEV_API ?? 'http://127.0.0.1:8002'
-const ROUTES = ['/health', '/chat']
+const ROUTES = ['/health', '/chat', '/speak']
 
 const proxied: ProxyOptions = {
   target: API_TARGET,

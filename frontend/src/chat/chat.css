@@ -180,3 +180,74 @@
     opacity: 0.6;
   }
 }
+
+/*
+ * Audio controls. The play button sits inline at the end of a reply rather
+ * than in a toolbar: it belongs to that message, and a reader scrolling back
+ * should find it where the text is.
+ */
+.speak {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 8px;
+  padding: 0;
+  vertical-align: middle;
+  color: var(--ajr-glow);
+  background: transparent;
+  border: 1px solid rgba(84, 222, 148, 0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: opacity 150ms ease, border-color 150ms ease;
+}
+
+.msg-assistant:hover .speak,
+.speak[data-state='playing'],
+.speak[data-state='loading'] {
+  opacity: 1;
+}
+
+.speak:hover {
+  border-color: var(--ajr-phosphor);
+}
+
+.speak[data-state='error'] {
+  color: #ff9b9b;
+  border-color: rgba(255, 155, 155, 0.4);
+}
+
+.speak-dots {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: typing-pulse 1s infinite ease-in-out;
+}
+
+.mute {
+  position: absolute;
+  top: -34px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--ajr-glow);
+  background: rgba(3, 14, 9, 0.5);
+  border: 1px solid rgba(84, 222, 148, 0.22);
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 150ms ease, border-color 150ms ease;
+}
+
+.mute:hover {
+  opacity: 1;
+  border-color: var(--ajr-phosphor);
+}
+
+.mute[aria-pressed='true'] {
+  color: rgba(214, 255, 232, 0.5);
+}
