@@ -50,15 +50,25 @@ def _render(passages: list[dict]) -> str:
     return "\n\n".join(lines)
 
 
-async def search_corpus(query: str, limit: int = 6) -> str:
-    """Search everything John Roderick has said on a topic.
+async def search_corpus(
+    query: str, limit: int = 6, speaker: str | None = None
+) -> str:
+    """Search everything said on the shows, on a topic.
 
-    Use this for any question about his life, opinions, stories or history.
-    Returns passages with the episode and timestamp they came from. Prefer
-    several narrow searches over one broad one -- a question about how a view
-    changed needs separate searches, not a single query.
+    Use this for any question about a life, opinion, story or history. Returns
+    passages with the episode and timestamp they came from. Prefer several
+    narrow searches over one broad one -- a question about how a view changed
+    needs separate searches, not a single query.
+
+    `speaker` restricts results to who said it, and is what makes a bare name
+    searchable. "Eleanor" alone returns Eleanor Roosevelt and Eleanor Rigby;
+    "Eleanor" said by Merlin Mann returns him talking to his own child. Use it
+    whenever you are checking whether a particular person uses a name.
     """
-    return _render(await _get("/search", {"q": query, "limit": limit}))
+    params: dict[str, object] = {"q": query, "limit": limit}
+    if speaker:
+        params["speaker"] = speaker
+    return _render(await _get("/search", params))
 
 
 async def find_quote(phrase: str, limit: int = 6) -> str:
@@ -84,3 +94,40 @@ async def episode_context(episode_id: str, at_s: float, window_s: float = 90.0) 
             {"episode_id": episode_id, "at_s": at_s, "window_s": window_s},
         )
     )
+
+
+def _render_relations(rows: list[dict]) -> str:
+    if not rows:
+        return "NO RESULTS. Nothing extracted about this person's relationships."
+    lines = []
+    for row in rows:
+        who = row["name"] or f"(unnamed {row['relation']})"
+        confidence = row.get("measured_precision", 0.0)
+        lines.append(
+            f"{row['speaker']} -- {row['relation']}: {who}  "
+            f"[this relation type is right about {confidence:.0%} of the time]"
+        )
+        for quote in row.get("evidence") or []:
+            lines.append(f"    evidence: {quote}")
+    return "\n".join(lines)
+
+
+async def family(person: str, relation: str | None = None) -> str:
+    """Names this person has been linked to as family, friends or colleagues.
+
+    Use this when a question asks who someone's relative is by relationship
+    rather than by name -- "what is X's daughter called" -- because the archive
+    usually names people in passages that never mention the relationship. It is
+    the only way to get from "Merlin Mann's child" to a name.
+
+    These are LEADS, NOT FACTS. Extraction is noisy and the reliability of each
+    kind is reported inline: sibling and friend are usually right, child,
+    parent and spouse usually are not. Read the evidence quote: "in my kids'
+    class there's two Aidens" is a classmate, not a child. Then search the
+    corpus for any name that looks plausible and cite what you find there --
+    never cite this tool as the source for a name.
+    """
+    params: dict[str, str] = {"person": person}
+    if relation:
+        params["relation"] = relation
+    return _render_relations(await _get("/relations", params))
