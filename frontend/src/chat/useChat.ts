@@ -7,10 +7,23 @@ export type ChatStatus = 'idle' | 'streaming' | 'error'
 let counter = 0
 const nextId = () => `m${(counter += 1)}`
 
-export function useChat() {
+/** Called as the reply streams, so audio can start before it finishes. */
+export type ChatHooks = {
+  onDelta?: (id: string, delta: string) => void
+  onFinish?: (id: string) => void
+}
+
+export function useChat(hooks: ChatHooks = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [status, setStatus] = useState<ChatStatus>('idle')
   const [error, setError] = useState<string | null>(null)
+
+  // Held in a ref so `send` never closes over a stale callback, and so
+  // changing the hooks does not rebuild `send` mid-stream.
+  const hooksRef = useRef(hooks)
+  useEffect(() => {
+    hooksRef.current = hooks
+  })
 
   // Mirrors `messages` so `send` can read the transcript without going stale.
   const transcript = useRef<ChatMessage[]>([])
@@ -47,6 +60,10 @@ export function useChat() {
           if (event.error) throw new Error(event.error)
           if (event.delta) {
             const delta = event.delta
+            // Handed on before the transcript update, so synthesis of the
+            // first sentence begins while later ones are still arriving. It
+            // cannot affect what renders.
+            hooksRef.current.onDelta?.(replyId, delta)
             commit((prev) =>
               prev.map((message) =>
                 message.id === replyId
@@ -56,6 +73,7 @@ export function useChat() {
             )
           }
         }
+        hooksRef.current.onFinish?.(replyId)
         setStatus('idle')
       } catch (caught) {
         if (controller.signal.aborted) {

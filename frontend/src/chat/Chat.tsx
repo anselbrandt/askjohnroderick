@@ -16,8 +16,11 @@ function withFootnotes(content: string): [string, string | null] {
 }
 
 export function Chat() {
-  const { messages, status, error, send, stop } = useChat()
   const speech = useSpeech()
+  const { messages, status, error, send, stop } = useChat({
+    onDelta: speech.feed,
+    onFinish: speech.finish,
+  })
   const [draft, setDraft] = useState('')
   const listRef = useRef<HTMLOListElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -32,18 +35,6 @@ export function Chat() {
     const list = listRef.current
     if (list && stick.current) list.scrollTop = list.scrollHeight
   }, [messages])
-
-  // Speak a reply once it is complete. Streaming is untouched: the text is
-  // already on screen by the time this runs, and audio never gates it.
-  const spoken = useRef<string | null>(null)
-  useEffect(() => {
-    if (speech.muted || streaming) return
-    const last = messages[messages.length - 1]
-    if (!last || last.role !== 'assistant' || !last.content) return
-    if (spoken.current === last.id) return
-    spoken.current = last.id
-    speech.speak(last.id, last.content)
-  }, [messages, streaming, speech])
 
   const onScroll = () => {
     const list = listRef.current
