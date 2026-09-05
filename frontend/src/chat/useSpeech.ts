@@ -55,7 +55,7 @@ export function useSpeech() {
 
   const segments = useRef<Segment[]>([])
   const buffer = useRef('')
-  const stopped = useRef(false)      // feeding finished for this message
+  const stopped = useRef(false) // feeding finished for this message
   const synthesizing = useRef(false)
   const playIndex = useRef(0)
   const audio = useRef<HTMLAudioElement | null>(null)

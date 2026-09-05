@@ -6,7 +6,8 @@ import './chat.css'
 const STICK_THRESHOLD = 96
 
 // A trailing block of "<superscript> episode-id @ timestamp" lines.
-const FOOTNOTES = /(?:^[\u2070\u00b9\u00b2\u00b3\u2074-\u2079]+[^\S\n]*[a-z0-9-]+\s*@\s*[\d:]+\s*$\n?)+\s*$/m
+const FOOTNOTES =
+  /(?:^[\u2070\u00b9\u00b2\u00b3\u2074-\u2079]+[^\S\n]*[a-z0-9-]+\s*@\s*[\d:]+\s*$\n?)+\s*$/m
 
 /** Split a reply into its prose and its footnote block, if it has one. */
 function withFootnotes(content: string): [string, string | null] {
@@ -72,14 +73,24 @@ export function Chat() {
         {speech.muted ? (
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
             <path d="M3 6.5h3L10 3v12L6 11.5H3z" fill="currentColor" />
-            <path d="M12 6.5l4 5M16 6.5l-4 5" stroke="currentColor" strokeWidth="1.6"
-                  strokeLinecap="round" fill="none" />
+            <path
+              d="M12 6.5l4 5M16 6.5l-4 5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              fill="none"
+            />
           </svg>
         ) : (
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
             <path d="M3 6.5h3L10 3v12L6 11.5H3z" fill="currentColor" />
-            <path d="M12.5 6a4 4 0 010 6M14.5 4a7 7 0 010 10" stroke="currentColor"
-                  strokeWidth="1.5" strokeLinecap="round" fill="none" />
+            <path
+              d="M12.5 6a4 4 0 010 6M14.5 4a7 7 0 010 10"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              fill="none"
+            />
           </svg>
         )}
       </button>
@@ -122,12 +133,34 @@ export function Chat() {
                           <span className="speak-dots" aria-hidden="true" />
                         ) : speech.speakingId === message.id &&
                           speech.state === 'playing' ? (
-                          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-                            <rect x="1" width="3.5" height="12" rx="1" fill="currentColor" />
-                            <rect x="7.5" width="3.5" height="12" rx="1" fill="currentColor" />
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            aria-hidden="true"
+                          >
+                            <rect
+                              x="1"
+                              width="3.5"
+                              height="12"
+                              rx="1"
+                              fill="currentColor"
+                            />
+                            <rect
+                              x="7.5"
+                              width="3.5"
+                              height="12"
+                              rx="1"
+                              fill="currentColor"
+                            />
                           </svg>
                         ) : (
-                          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            aria-hidden="true"
+                          >
                             <path d="M2 1l9 5-9 5z" fill="currentColor" />
                           </svg>
                         )}
