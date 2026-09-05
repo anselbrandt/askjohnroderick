@@ -1,5 +1,3 @@
-
-
 def test_footnotes_are_not_spoken():
     """Citations are for the eye.
 

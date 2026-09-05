@@ -50,9 +50,7 @@ def _render(passages: list[dict]) -> str:
     return "\n\n".join(lines)
 
 
-async def search_corpus(
-    query: str, limit: int = 6, speaker: str | None = None
-) -> str:
+async def search_corpus(query: str, limit: int = 6, speaker: str | None = None) -> str:
     """Search everything said on the shows, on a topic.
 
     Use this for any question about a life, opinion, story or history. Returns

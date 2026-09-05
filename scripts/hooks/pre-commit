@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# Refuse a commit that would not pass the project's own checks.
+#
+# Version-controlled rather than left in .git/hooks, which is not, so this is
+# shared and reviewable. Activate it once per clone:
+#
+#     git config core.hooksPath scripts/hooks
+#
+# Checks, never rewrites. A hook that reformats files behind you changes what
+# you are about to commit after you have read it, and can sweep unstaged edits
+# in with a `git add`. It says what to run instead.
+#
+# `git commit --no-verify` skips all of this when you need it to.
+#
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+status=0
+fail() { printf '\n  %s\n' "$*"; status=1; }
+
+# The checks read the working tree, not the staged content. Where the two
+# differ the result can disagree with what is actually being committed, so say
+# so rather than quietly testing the wrong thing.
+partial=$(git diff --name-only -- $(echo "$staged" | tr '\n' ' ') 2>/dev/null)
+if [ -n "$partial" ]; then
+  printf '  note: these files have unstaged changes; checks read the working tree:\n'
+  printf '    %s\n' $partial
+fi
+
+if echo "$staged" | grep -q '^frontend/'; then
+  echo "  frontend: oxfmt, oxlint, tsc"
+  (
+    cd frontend || exit 1
+    npx oxfmt --check . >/dev/null 2>&1 || {
+      echo "    these files are not formatted:"
+      npx oxfmt --list-different . 2>&1 | sed 's/^/      /'
+      echo "    fix: (cd frontend && npm run format)"
+      exit 1
+    }
+    npx oxlint --deny-warnings 2>&1 | sed 's/^/    /' || exit 1
+    npx tsc -b 2>&1 | sed 's/^/    /' || exit 1
+  ) || fail "frontend checks failed"
+fi
+
+if echo "$staged" | grep -q '^backend/'; then
+  echo "  backend: ruff"
+  (
+    cd backend || exit 1
+    uv run ruff format --check app tests 2>&1 | sed 's/^/    /' || {
+      echo "    fix: (cd backend && uv run ruff format app tests)"; exit 1
+    }
+    uv run ruff check app tests 2>&1 | sed 's/^/    /' || exit 1
+  ) || fail "backend checks failed"
+fi
+
+[ "$status" -eq 0 ] && echo "  ok"
+exit "$status"
