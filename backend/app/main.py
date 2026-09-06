@@ -2,9 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import ORIGIN_REGEX, ORIGINS, ROOT_PATH
+from app.observability import configure as configure_tracing
 from app.routers import chat, health, speak
 
 app = FastAPI(title="Ask John Roderick", root_path=ROOT_PATH)
+
+# Before the routers, so their requests are covered.
+configure_tracing(app)
 
 app.add_middleware(
     CORSMiddleware,
