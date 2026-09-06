@@ -15,6 +15,7 @@ from pydantic_ai.messages import (
     UserPromptPart,
 )
 
+from app import turnlog
 from app.access import allowlisted
 from app.agent import agent
 from app.corpus import CorpusUnavailable
@@ -29,6 +30,9 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[Message]
+    # Groups turns into a conversation. Client-supplied because the server has
+    # no session of its own; absent, turns are still logged, just unlinked.
+    session_id: str | None = None
 
 
 def to_history(messages: list[Message]) -> list[ModelMessage]:
@@ -70,6 +74,14 @@ async def chat(body: ChatRequest) -> StreamingResponse:
 
     *history, latest = body.messages
 
+    # Set for the request so the corpus tools record themselves into it. What
+    # was asked, what was searched, and what came back is the raw material for
+    # every later improvement to retrieval, and it has been discarded until now.
+    turn = turnlog.Turn(
+        session_id=body.session_id or "unlinked", question=latest.content
+    )
+    turnlog.current.set(turn)
+
     async def events() -> AsyncIterator[str]:
         """Stream the answer, including the text that follows a tool call.
 
@@ -79,6 +91,8 @@ async def chat(body: ChatRequest) -> StreamingResponse:
         does not look like a truncation from the client -- it looks like a
         short reply -- which is what makes it worth pinning here.
         """
+        spoken: list[str] = []
+        failure: str | None = None
         try:
             async with agent.run_stream_events(
                 latest.content, message_history=to_history(history)
@@ -86,15 +100,22 @@ async def chat(body: ChatRequest) -> StreamingResponse:
                 async for event in stream:
                     delta = text_delta(event)
                     if delta:
+                        spoken.append(delta)
                         yield sse({"delta": delta})
             yield sse({"done": True})
         except CorpusUnavailable as exc:
             # Distinct from a general failure: the archive being unreachable
             # means this route cannot answer at all, since it may not fall back
             # on what the model already knows.
+            failure = f"corpus unavailable: {exc}"
             yield sse({"error": f"the archive is unreachable: {exc}"})
         except Exception as exc:  # noqa: BLE001 - headers are sent, report in-band
+            failure = f"{type(exc).__name__}: {exc}"
             yield sse({"error": f"{type(exc).__name__}: {exc}"})
+        finally:
+            # After the reply is delivered, and swallowing its own failures: a
+            # bug in logging must not cost a reader their answer.
+            turnlog.save(turn, "".join(spoken), failure)
 
     return StreamingResponse(
         events(),

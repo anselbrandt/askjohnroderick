@@ -5,3 +5,8 @@
 __pycache__/
 *.py[cod]
 .DS_Store
+
+# The turn log: what real people asked, verbatim. User data, and it grows
+# continuously. The schema is in app/turnlog.py; the contents are not shared.
+backend/data/turns.sqlite3
+backend/data/turns.sqlite3-*

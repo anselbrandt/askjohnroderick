@@ -12,8 +12,11 @@ the model can copy rather than assemble.
 
 from __future__ import annotations
 
+import time
+
 import httpx
 
+from app import turnlog
 from app.config import CORPUS_TIMEOUT_S, CORPUS_URL
 
 
@@ -26,14 +29,43 @@ class CorpusUnavailable(RuntimeError):
     """
 
 
+def _identify(row: dict) -> str:
+    """What a result was, in a form a later pass can match against a citation.
+
+    Passages are identified by where they are, since that is what a citation
+    names. Relations have no location -- they are an index over the corpus, not
+    a piece of it -- so they are identified by what they assert, which is the
+    thing worth knowing was offered and taken or ignored.
+    """
+    if "episode_id" in row:
+        return f"{row['episode_id']}@{row.get('start_s', 0)}"
+    if "relation" in row:
+        return f"{row.get('speaker', '?')}/{row['relation']}/{row.get('name') or '?'}"
+    return "?"
+
+
 async def _get(path: str, params: dict) -> list[dict]:
+    """Fetch from the corpus service, recording the call for the turn log.
+
+    Recorded here rather than in each tool so that every call is captured by
+    construction -- a tool added later cannot forget to log itself.
+    """
+    started = time.monotonic()
+    call = turnlog.ToolCall(tool=path.lstrip("/"), args=dict(params))
     try:
         async with httpx.AsyncClient(timeout=CORPUS_TIMEOUT_S) as client:
             response = await client.get(f"{CORPUS_URL}{path}", params=params)
             response.raise_for_status()
-            return response.json()
+            rows = response.json()
+        call.n_results = len(rows)
+        call.passages = [_identify(row) for row in rows if isinstance(row, dict)]
+        return rows
     except httpx.HTTPError as exc:
+        call.error = f"{type(exc).__name__}: {exc}"
         raise CorpusUnavailable(f"{type(exc).__name__}: {exc}") from exc
+    finally:
+        call.duration_ms = int((time.monotonic() - started) * 1000)
+        turnlog.record(call)
 
 
 def _render(passages: list[dict]) -> str:
