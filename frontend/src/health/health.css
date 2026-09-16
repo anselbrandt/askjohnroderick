@@ -1,0 +1,85 @@
+/*
+ * One row per service, in the corner the portrait leaves empty. Small and
+ * dim on purpose: this is instrumentation, not part of the conversation, and
+ * it should be findable without competing with the reply for attention.
+ */
+.health {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  /* Tabular figures keep the corpus counts in the tooltip from shifting. */
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.health-service {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  /* The rows are readable on hover; the dots carry the state at a glance. */
+  color: rgba(214, 255, 232, 0.55);
+  transition: color 200ms ease;
+  /* Re-enabled per row so the tooltip works without the stack eating clicks
+   * meant for the portrait behind it. */
+  pointer-events: auto;
+  cursor: default;
+}
+
+.health-service:hover {
+  color: var(--ajr-text);
+}
+
+.health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--dot);
+  /* The glow is what makes a green dot read as lit rather than painted, and
+   * it is the same phosphor bloom the rest of the page is built on. */
+  box-shadow: 0 0 6px var(--dot);
+  transition:
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.health-service[data-status='ok'] {
+  --dot: var(--ajr-phosphor);
+}
+
+.health-service[data-status='loading'] {
+  --dot: #f5b642;
+}
+
+.health-service[data-status='down'] {
+  --dot: #ff5f56;
+  color: rgba(255, 149, 143, 0.85);
+}
+
+/*
+ * A service still coming up pulses, so "warming up" is legible without
+ * reading the tooltip -- it is the one state that resolves on its own.
+ */
+.health-service[data-status='loading'] .health-dot {
+  animation: health-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes health-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .health-service[data-status='loading'] .health-dot {
+    animation: none;
+  }
+}
