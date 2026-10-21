@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/speak", "destination": "/index.html" }]
+}

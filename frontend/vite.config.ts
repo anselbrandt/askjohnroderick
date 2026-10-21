@@ -32,6 +32,12 @@ const proxied: ProxyOptions = {
   // timeout cuts the stream off mid-answer.
   timeout: 300_000,
   proxyTimeout: 300_000,
+  // /speak is also a page. A browser navigating to it asks for HTML, which
+  // the app answers; only the API's POSTs go through to the backend.
+  bypass: (req) =>
+    req.method === 'GET' && req.headers.accept?.includes('text/html')
+      ? '/index.html'
+      : undefined,
   configure: (proxy) => {
     const ip = devClientIp()
     if (ip) {
