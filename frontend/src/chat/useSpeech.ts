@@ -52,6 +52,7 @@ export function useSpeech() {
   const [muted, setMuted] = useState(storedMuted)
   const [speakingId, setSpeakingId] = useState<string | null>(null)
   const [state, setState] = useState<SpeechState>('idle')
+  const [error, setError] = useState<string | null>(null)
 
   const segments = useRef<Segment[]>([])
   const buffer = useRef('')
@@ -61,6 +62,7 @@ export function useSpeech() {
   const audio = useRef<HTMLAudioElement | null>(null)
   const activeId = useRef<string | null>(null)
   const abort = useRef<AbortController | null>(null)
+  const failure = useRef<string | null>(null) // why the last segment failed
 
   const reset = useCallback(() => {
     abort.current?.abort()
@@ -73,6 +75,8 @@ export function useSpeech() {
     segments.current = []
     buffer.current = ''
     playIndex.current = 0
+    failure.current = null
+    setError(null)
     synthesizing.current = false
     stopped.current = false
   }, [])
@@ -94,7 +98,13 @@ export function useSpeech() {
       if (!segment) {
         // Caught up. Only finished once no more text is coming.
         if (stopped.current) {
-          setState('idle')
+          // One failed sentence is skipped quietly. Every sentence failing
+          // means nothing was heard at all, and that has to be said, or the
+          // button just flips back to play as if it had worked.
+          const silent =
+            segments.current.length > 0 && segments.current.every((s) => s.failed)
+          setState(silent ? 'error' : 'idle')
+          setError(silent ? failure.current : null)
           setSpeakingId(null)
           activeId.current = null
         }
@@ -142,9 +152,20 @@ export function useSpeech() {
             body: JSON.stringify({ text: next.text }),
             signal: controller.signal,
           })
-          if (!response.ok) throw new Error(String(response.status))
+          if (!response.ok) {
+            failure.current =
+              response.status === 403
+                ? 'The voice is not open to the public yet.'
+                : response.status === 503
+                  ? 'The voice is not available right now.'
+                  : `The voice failed (${response.status}).`
+            throw new Error(String(response.status))
+          }
           next.url = URL.createObjectURL(await response.blob())
         } catch {
+          if (!controller.signal.aborted) {
+            failure.current ??= 'Could not reach the voice.'
+          }
           // A segment that will not synthesize is skipped, not fatal: the
           // rest of the reply is still worth hearing, and the text is on
           // screen regardless.
@@ -280,5 +301,5 @@ export function useSpeech() {
 
   useEffect(() => () => reset(), [reset])
 
-  return { muted, toggleMuted, speak, feed, finish, stop, speakingId, state }
+  return { muted, toggleMuted, speak, feed, finish, stop, speakingId, state, error }
 }

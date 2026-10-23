@@ -122,3 +122,10 @@
     opacity: 0.6;
   }
 }
+
+.speak-page-error {
+  position: relative;
+  margin: 0;
+  font-size: 0.875rem;
+  color: #ff9b9b;
+}

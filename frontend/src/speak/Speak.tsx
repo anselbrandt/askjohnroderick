@@ -68,6 +68,11 @@ export function Speak() {
             </svg>
           )}
         </button>
+        {speech.error && (
+          <p className="speak-page-error" role="alert">
+            {speech.error}
+          </p>
+        )}
       </form>
     </div>
   )
