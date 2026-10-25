@@ -8,7 +8,12 @@ const MUTED_KEY = 'ajr.muted'
 // A sentence, plus whatever closing punctuation trails it. Splitting here is
 // what lets audio start before the reply is finished: the synthesizer needs a
 // whole clause, not a whole answer.
-const SENTENCE = /[^.!?\n]+[.!?]+["')\]]*(?=\s|$)/
+//
+// The sentence has to be followed by whitespace that has actually arrived. A
+// delta can end on any character, so the end of the buffer is not the end of
+// a sentence: "in 1994." may be about to become "in 1994.¹" or "1994.5". The
+// last sentence of a reply has no whitespace after it; the final flush takes it.
+const SENTENCE = /[^.!?\n]+[.!?]+["')\]]*(?=\s)/
 
 // Even without punctuation, speak something eventually. A long unbroken run
 // would otherwise sit in the buffer until the reply ended, which is the
@@ -25,7 +30,12 @@ const MIN_FIRST = 90
 // The footnote block. Everything from the first marker line onward is for the
 // eye only, so feeding stops there rather than sending it and relying on the
 // server to throw it away.
-const FOOTNOTE_START = /(^|\n)[⁰¹²³⁴-⁹]/
+//
+// Only after a newline. The start of the buffer is not the start of a line:
+// markers follow the full stop ("in Seattle.¹ Then"), so once that sentence
+// is cut off the buffer begins with a marker, and anchoring on ^ took it for
+// the footnotes and went silent for the rest of the reply.
+const FOOTNOTE_START = /\n[⁰¹²³⁴-⁹]/
 
 type Segment = { text: string; url: string | null; failed: boolean }
 
