@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { cloudflare } from '@cloudflare/vite-plugin'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type ProxyOptions } from 'vite'
 
@@ -47,6 +48,8 @@ const proxied: ProxyOptions = {
 }
 
 export default defineConfig({
-  plugins: [react()],
+  // cloudflare() reads cloudflare.config.ts and builds the Worker alongside
+  // the client bundle.
+  plugins: [react(), cloudflare()],
   server: { proxy: Object.fromEntries(ROUTES.map((route) => [route, proxied])) },
 })

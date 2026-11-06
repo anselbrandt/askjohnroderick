@@ -5,21 +5,24 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && cf build",
     "lint": "oxlint",
     "format": "oxfmt .",
     "check": "oxfmt --check . && oxlint --deny-warnings && tsc -b",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "tsc -b && cf deploy"
   },
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "2.0.0-beta.v.12",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
+    "cf": "1.0.0-beta.28",
     "oxfmt": "^0.66.0",
     "oxlint": "^1.79.0",
     "typescript": "~6.0.2",
