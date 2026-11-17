@@ -24,7 +24,7 @@ function devClientIp(): string {
 }
 
 const API_TARGET = process.env.VITE_DEV_API ?? 'http://127.0.0.1:8002'
-const ROUTES = ['/health', '/chat', '/speak']
+const ROUTES = ['/health', '/chat', '/speak', '/compare']
 
 const proxied: ProxyOptions = {
   target: API_TARGET,
@@ -33,7 +33,7 @@ const proxied: ProxyOptions = {
   // timeout cuts the stream off mid-answer.
   timeout: 300_000,
   proxyTimeout: 300_000,
-  // /speak is also a page. A browser navigating to it asks for HTML, which
+  // /speak and /compare are also pages. A browser navigating to it asks for HTML, which
   // the app answers; only the API's POSTs go through to the backend.
   bypass: (req) =>
     req.method === 'GET' && req.headers.accept?.includes('text/html')

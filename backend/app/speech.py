@@ -105,8 +105,13 @@ def join_wavs(chunks: list[bytes]) -> bytes:
     return out.getvalue()
 
 
-async def synthesize(text: str) -> bytes:
+async def synthesize(
+    text: str, url: str = TTS_URL, extra: dict[str, str] | None = None
+) -> bytes:
     """Speak `text`, returning one WAV.
+
+    `url` and `extra` let /compare send the same spans to the service that
+    holds every past version, naming the version in `extra`.
 
     Spans are synthesized in sequence rather than concurrently: the service
     holds a single model on a single GPU and serialises them anyway, so
@@ -120,7 +125,9 @@ async def synthesize(text: str) -> bytes:
     try:
         async with httpx.AsyncClient(timeout=TTS_TIMEOUT_S) as client:
             for span in split_spans(spoken):
-                response = await client.post(f"{TTS_URL}/speak", json={"text": span})
+                response = await client.post(
+                    f"{url}/speak", json={"text": span, **(extra or {})}
+                )
                 response.raise_for_status()
                 chunks.append(response.content)
     except httpx.HTTPError as exc:

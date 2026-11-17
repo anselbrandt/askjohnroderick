@@ -35,3 +35,7 @@ ORIGIN_REGEX = r"https://askjohnroderick-[a-z0-9]+-ansel-brandts-projects\.verce
 # holds a voice model of a real person and has no authentication.
 TTS_URL = os.getenv("TTS_URL", "http://127.0.0.1:8004")
 TTS_TIMEOUT_S = float(os.getenv("TTS_TIMEOUT_S", "180"))
+
+# Every version the site has served, for /compare (podcast-tts-compare in the
+# podcast-diarization project). Local only, for the same reason.
+TTS_COMPARE_URL = os.getenv("TTS_COMPARE_URL", "http://127.0.0.1:8007")
